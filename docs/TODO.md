@@ -2,7 +2,7 @@
 
 ## UI
 - [ ] Empty transcript (no speech captured) is confusing: the field stays empty under the label "Sprawdź, czy tekst zgadza się z tym, co powiedziałeś.", but nothing says that no speech was detected. A user who is sure they spoke does not know what to do. Needed: an explicit message when the transcript comes back empty (for example "Nie wykryto mowy. Nagraj ponownie albo wpisz odpowiedź tekstem."), and no "check the text" label next to an empty field. Not done: ran out of time.
-- [x] Duplicate "112": single red bold 112 in the banner now (done, visual check in the browser still open).
+- [x] Duplicate "112": single red bold 112 in the banner now (done, visually confirmed 2026-10-23).
 
 ## Code
 - [x] Treat HTTP 429 like 503 in `app/src/api/gemini.js` (done, with a test).
@@ -14,7 +14,7 @@
 ## Verification
 - [ ] Confirm the allergy / "nie wiem" summaries (scenarios 2 and 5) by reading the outputs, not only PASS/FAIL.
 - [ ] Manual test of the newest build (Q0 changes, recorder guards, single 112), including a wrong or muted microphone.
-- [ ] Screenshots for the README.
+- [x] Screenshots for the README (partially: 4 of 6; 03 and 06 not taken).
 
 ## Docs
 - [x] Update `docs/DOCUMENTATION.md` after implementation (done for a255031; remaining items are in its checklist).

@@ -59,6 +59,7 @@ Agreed semantics: patient denial = "brak"; "I don't know" = "nie podano". The pr
 | 4 | after | Investigation 2 (read-only). The `btoa` branch reproduced in Node without `Buffer` matched the reference for 0 to 1 MB and all 256 byte values. TTS speech converted with ffmpeg to MediaRecorder-like WebM/Opus (mime `audio/webm;codecs=opus`) was transcribed exactly ("Od trzech dni boli mnie gardło i mam gorączkę."), also at about -33 dB peak in pink noise. But 3 s of low pink noise alone in WebM returned invented text ("Drodzy widzowie,"), the same failure mode as the two observed outputs. The original transcription prompt covered only "silent or unintelligible" audio, not noise. Conclusion: code and format were fine; the recording most likely held no usable speech and the model invented text for noise. |
 | 5 | after | Root cause confirmed by the user: the wrong microphone was selected in the browser. With the correct one the flow worked end to end: summary "Dolegliwość: Ból gardła i gorączka; Od kiedy: Dwa dni; Leki: Paracetamol doraźnie; Alergie: Brak", four patient quotes, no alerts (correct for a non-alarming case). A voice-dictation tool on the same machine can occupy the microphone; that was a suspected factor, unconfirmed. |
 | 6 | after | Response (commit ea3cee7): stricter transcription prompt (empty text unless clearly audible human speech; never guess); recorder guards (minimum length 0.7 s, minimum signal level, explicit `audio/webm;codecs=opus`, playback of the last recording); an unclear Q0 answer no longer proceeds silently, the patient repeats or picks explicit "Tak"/"Nie" buttons; 429 falls back to the next model like 503; unit test for the base64 browser branch. |
+| 7 | 2026-10-23, later | Manual run of the newest build, correct microphone. Scenario 2 by voice: no escalation, correct summary ("Kaszel i katar", from three days, cough syrup, allergies "brak"), no alerts. Scenario 3 by voice: escalation via the LLM flag (reason quotes "ściska mnie w klatce piersiowej"), one alert in the mock panel. The banner shows a single red 112. Not verified in this run: the "Nie zrozumieliśmy" path, the muted-microphone message, the race guards, scenario 5. Screenshots in `docs/screenshots/`. |
 
 ### How to reproduce the microphone failure safely (TODO verify manually)
 Pick a wrong input device, or mute the microphone in the OS, and record. Expected with the current build: a message such as "Mikrofon prawie nic nie nagrał. Sprawdź, czy wybrano właściwy mikrofon…" (near-zero signal, peak below about -40 dBFS) or "Nagranie jest za krótkie lub puste…" (under 0.7 s), and nothing sent to the model, not invented text. Implemented; not yet verified in the browser.
@@ -77,8 +78,8 @@ Pick a wrong input device, or mute the microphone in the OS, and record. Expecte
 | Double click on the last "Dalej" could start two summarize calls | Adversarial review | Guard implemented (second call blocked). No automated test; manual check TODO |
 | A recording finishing after the patient moved on could fill the next question's field | Adversarial review | Guard implemented (stale result dropped when the question changed). No automated test; manual check TODO |
 | Empty transcript (no speech captured) shows an empty field under "check that the text matches what you said", with no explanation; the user does not know what to do | Manual voice test | NOT fixed: ran out of time. Needs an explicit "no speech detected, record again or type the answer" message |
-| Duplicate "112" in the banner | Review | Fixed: single red bold 112 in the banner, one 112 in the emergency box. Visual check in the browser TODO |
-| Allergies "nie podano" after a denial; verbatim "I don't know" copied into fields | Automated scenarios 2 and 5 | Prompt change applied (denial gives "brak", "nie wiem" gives "nie podano"). Scenarios 5/5 PASS afterwards, but the fields were not read: confirm (TODO) |
+| Duplicate "112" in the banner | Review | Fixed: single red bold 112 in the banner, one 112 in the emergency box. Visually confirmed 2026-10-23 (screenshots) |
+| Allergies "nie podano" after a denial; verbatim "I don't know" copied into fields | Automated scenarios 2 and 5 | Prompt change applied (denial gives "brak", "nie wiem" gives "nie podano"). Scenarios 5/5 PASS afterwards. Scenario 2 confirmed by voice on 2026-10-23 (allergies "brak"). Scenario 5 wording ("nie podano") still unconfirmed (TODO) |
 
 Also confirmed by the review: `parseSummary` rejects anything but boolean or "true"/"false" flags, `formatSummary` adds no all-clear wording, the escalation latch fires `notifyDoctor` once, and Clear invalidates in-flight requests.
 
@@ -102,13 +103,13 @@ Not covered:
 
 - [x] `npm --prefix app test` green after the Q0 and race fixes: 114 passing at a255031.
 - [x] Re-run `run-scenarios.mjs` after the prompt change: 5/5 PASS (one run, PASS/FAIL only).
-- [ ] Read the summaries of scenarios 2 and 5 to confirm "brak" / "nie podano" as agreed.
+- [ ] Read the summaries of scenarios 2 and 5 to confirm "brak" / "nie podano" as agreed. Scenario 2 confirmed by voice (2026-10-23); scenario 5 still open.
 - [x] "Nie, ale mam duszność", "Nie wiem" and similar need confirmation (unit tests). Manual check of the Q0 buttons and hint in the browser still TODO.
 - [ ] Confirm the double-click guard on the last "Dalej" and the stale-recording guard by hand (optional: component tests).
 - [ ] Add a clear message when the transcript is empty (no speech captured); not done, ran out of time.
-- [ ] Confirm a single "112" in the banner visually.
+- [x] Confirm a single "112" in the banner visually (screenshots, 2026-10-23).
 - [ ] Verify the wrong or muted microphone message (see section 4).
-- [ ] Manual test of the newest build (Q0 changes, recorder guards, single 112).
+- [x] Manual test of the newest build, scenarios 2 and 3 by voice (2026-10-23). Still open from it: the "Nie zrozumieliśmy" path and the muted-microphone message.
 - [ ] Manual voice run of all 5 scenarios with the correct microphone; record transcription errors.
 - [ ] Check whether a dictation tool occupying the microphone affects recording.
 - [ ] Try a second browser and microphone.

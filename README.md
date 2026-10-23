@@ -1,5 +1,4 @@
-# Voice pre-consultation intake (DRAFT)
-
+# Voice pre-consultation intake
 A personal project exploring voice as an interface in telemedicine. Before a consultation, the patient answers a few fixed questions by voice. Google Gemini transcribes the answers and produces a structured summary for the doctor, including the patient's verbatim quotes. The AI does not assess urgency, prioritise, diagnose, advise treatment or reassure. It only prepares the conversation.
 
 Stack: Vite + React + JavaScript, no backend. This is a prototype and not a medical product.
@@ -68,7 +67,23 @@ Build: `npm --prefix app run build`. The `.env` file (gitignored, `GEMINI_API_KE
 
 ## Screenshots
 
-TODO (not taken yet)
+All screenshots use fictional data; no API key is visible.
+
+![Scenario 3: escalation](docs/screenshots/05-escalation-scenario3.png)
+
+Scenario 3 (hidden red flag): the red emergency box, the reason with the patient's quote, and one alert in the mock "Alerty dla lekarza" panel (source: llm).
+
+![Scenario 2: summary](docs/screenshots/04-result-scenario2.png)
+
+Scenario 2 (negation trap): a correct summary for the doctor, no alerts, allergies "brak".
+
+![Consent screen](docs/screenshots/01-consent.png)
+
+Consent screen with the empty key field and the banner with a single red 112.
+
+![Screening question Q0](docs/screenshots/02-question-q0.png)
+
+Screening question Q0 with the hint and the Tak/Nie buttons.
 
 ## Testing approach
 
@@ -82,7 +97,7 @@ Results as of 2026-10-23, commit a255031:
 
 - Unit tests: 114 passing in 5 files. The build succeeds.
 - Scenarios: one run, all 5 PASS (the script prints PASS/FAIL only; the model is not deterministic, so one run is one sample). The summary fields after the latest prompt change are not yet inspected.
-- Manual voice: earlier runs failed because of a wrong microphone; with the right one the full flow gave a correct summary. The newest build has not yet been tried by hand (TODO).
+- Manual voice: earlier runs failed because of a wrong microphone; with the right one the full flow gave a correct summary. On the newest build (2026-10-23, correct microphone) scenarios 2 and 3 were run by voice and passed: scenario 2 gave no escalation, a correct summary and allergies "brak"; scenario 3 escalated through the LLM flag and the alert appeared in the mock panel. The banner shows a single red 112. Not manually verified: the "Nie zrozumieliśmy" path, the muted-microphone message, the two race guards, and scenario 5 ("nie wiem" giving "nie podano").
 
 ## More documentation
 
