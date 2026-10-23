@@ -12,10 +12,21 @@ export function parseYesNo(text) {
   return "yes"; // fail towards escalation (also for empty text)
 }
 
+// UI-only classification for Q0. NEVER decides escalation (parseYesNo does that).
+// "unclear" must never become "no": the patient has to decide explicitly via buttons.
+export function classifyAnswer(text) {
+  const t = typeof text === "string" ? text : "";
+  if (t.trim() === "") return "unclear";
+  if (HAS_TAK.test(t)) return "yes";
+  if (STARTS_WITH_NO.test(t)) return "no";
+  return "unclear";
+}
+
 export function buildTranscriptionPrompt() {
   return (
-    "Transcribe this Polish audio verbatim. Do not correct, add, or interpret. " +
-    'Return JSON {"text": "..."}. If the audio is silent or unintelligible, return empty text.'
+    "Transcribe the human speech in this Polish audio verbatim. Do not correct, add, or interpret. " +
+    "If there is no clearly audible human speech (silence, background noise, music, breathing), return empty text. " +
+    'Never guess or invent words. Return JSON {"text": "..."}.'
   );
 }
 

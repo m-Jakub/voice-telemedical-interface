@@ -1,4 +1,4 @@
-export const MODEL_IDS = ["gemini-3.5-flash", "gemini-3.1-flash-lite"]; // tried in order
+export const MODEL_IDS = ["gemini-3.5-flash", "gemini-3.1-flash-lite"]; // tried in order; next one is used on HTTP 503, HTTP 429 or timeout
 export const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 export const NOT_STATED = "nie podano";
 export const NO_ANSWER = "(brak odpowiedzi)";

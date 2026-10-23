@@ -77,6 +77,23 @@ describe("summarize", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(MODEL_IDS.length);
   });
 
+  it("falls back to the second model on 429", async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(statusResponse(429))
+      .mockResolvedValueOnce(okResponse(JSON.stringify(goodSummary)));
+    await summarize(KEY, answers, { fetchImpl });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(fetchImpl.mock.calls[1][0]).toBe(`${API_BASE}/models/${MODEL_IDS[1]}:generateContent`);
+  });
+
+  it("throws GeminiError HTTP when all models return 429", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(statusResponse(429));
+    const err = await summarize(KEY, answers, { fetchImpl }).catch((e) => e);
+    expect(err).toBeInstanceOf(GeminiError);
+    expect(err.code).toBe("HTTP");
+    expect(fetchImpl).toHaveBeenCalledTimes(MODEL_IDS.length);
+  });
+
   it("falls back on timeout and throws NETWORK when all time out", async () => {
     const timeoutErr = Object.assign(new Error("timeout"), { name: "TimeoutError" });
     const fetchImpl = vi.fn().mockRejectedValue(timeoutErr);
@@ -174,6 +191,20 @@ describe("transcribe", () => {
     expect(await transcribe(KEY, blob, { fetchImpl: silent })).toEqual({ text: "" });
     const missing = vi.fn().mockResolvedValue(okResponse("{}"));
     expect(await transcribe(KEY, blob, { fetchImpl: missing })).toEqual({ text: "" });
+  });
+
+  it("btoa branch (no Buffer) gives the same base64 for audio larger than one chunk", async () => {
+    const bytes = new Uint8Array(40000).map((_, i) => i % 256); // > 0x8000, covers every byte value
+    const expected = Buffer.from(bytes).toString("base64"); // computed before Buffer is hidden
+    vi.stubGlobal("Buffer", undefined);
+    try {
+      const fetchImpl = vi.fn().mockResolvedValue(okResponse(JSON.stringify({ text: "x" })));
+      await transcribe(KEY, new Blob([bytes], { type: "audio/webm" }), { fetchImpl });
+      const body = JSON.parse(fetchImpl.mock.calls[0][1].body);
+      expect(body.contents[0].parts[1].inline_data.data).toBe(expected);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("throws PARSE on invalid JSON", async () => {

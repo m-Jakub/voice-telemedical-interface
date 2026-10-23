@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   parseYesNo,
+  classifyAnswer,
   buildTranscriptionPrompt,
   buildSummaryPrompt,
   parseSummary,
@@ -74,6 +75,32 @@ describe("buildTranscriptionPrompt", () => {
     const p = buildTranscriptionPrompt();
     expect(p).toMatch(/verbatim/i);
     expect(p).toContain('"text"');
+  });
+  it("tells the model to return empty text for non-speech and never invent words", () => {
+    const p = buildTranscriptionPrompt();
+    expect(p).toContain("no clearly audible human speech");
+    expect(p).toContain("Never guess");
+  });
+});
+
+describe("classifyAnswer", () => {
+  it("is unclear for empty or whitespace", () => {
+    expect(classifyAnswer("")).toBe("unclear");
+    expect(classifyAnswer("  ")).toBe("unclear");
+    expect(classifyAnswer(null)).toBe("unclear");
+  });
+  it("is no for a clear leading nie without tak", () => {
+    expect(classifyAnswer("Nie.")).toBe("no");
+    expect(classifyAnswer("Nie, nic z tych rzeczy.")).toBe("no");
+  });
+  it("is yes when a whole-word tak is present", () => {
+    expect(classifyAnswer("Tak, mam duszność")).toBe("yes");
+    expect(classifyAnswer("nie wiem, tak chyba")).toBe("yes");
+  });
+  it("is unclear (never no) for anything else", () => {
+    expect(classifyAnswer("nieźle")).toBe("unclear");
+    expect(classifyAnswer("Głowa mi pęka od tego hałasu.")).toBe("unclear");
+    expect(classifyAnswer("No nie wiem")).toBe("unclear");
   });
 });
 

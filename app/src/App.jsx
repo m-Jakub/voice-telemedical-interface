@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { QUESTIONS } from "./config.js";
-import { parseYesNo, emptySummary, shouldEscalate } from "./logic.js";
+import { parseYesNo, classifyAnswer, emptySummary, shouldEscalate } from "./logic.js";
 import { summarize, transcribe } from "./api/gemini.js";
 import { notifyDoctor, getAlerts, subscribeAlerts, clearAlerts } from "./notifyDoctor.js";
 import Banner from "./components/Banner.jsx";
@@ -23,7 +23,10 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [questionError, setQuestionError] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  // { text, n }: the counter n makes two identical transcripts in a row still refill the field.
   const [transcript, setTranscript] = useState(null);
+  const transcriptCount = useRef(0);
+  const [q0Unclear, setQ0Unclear] = useState(false); // Q0 answer was not clearly yes/no
   // Ref guards the latch synchronously (state updates are async / StrictMode safe).
   const latchRef = useRef(false);
   // Incremented on Clear; async results from an older session are dropped.
@@ -59,12 +62,14 @@ export default function App() {
     setQuestionError(null);
     setErrorMessage("");
     setTranscript(null);
+    setQ0Unclear(false);
     clearAlerts();
   }
 
   function goToQuestion(i) {
     setQIndex(i);
     setTranscript(null);
+    setQ0Unclear(false);
     setQuestionError(null);
     setScreen("question");
   }
@@ -91,6 +96,13 @@ export default function App() {
   function handleSubmit(text) {
     const q = QUESTIONS[qIndex];
     if (qIndex === 0) {
+      // "unclear" never becomes "no": stay on Q0 and let the patient decide with the buttons.
+      // The buttons submit "Tak"/"Nie" through this same path; parseYesNo stays the only escalation decision.
+      if (classifyAnswer(text) === "unclear") {
+        setQ0Unclear(true);
+        return;
+      }
+      setQ0Unclear(false);
       if (parseYesNo(text) === "yes") {
         setSummary(emptySummary());
         escalate({ escalate: true, source: "screening", quote: text });
@@ -113,7 +125,8 @@ export default function App() {
     try {
       const res = await transcribe(apiKey, blob);
       if (session !== sessionRef.current) return; // cleared meanwhile
-      setTranscript(res.text || "");
+      transcriptCount.current += 1;
+      setTranscript({ text: res.text || "", n: transcriptCount.current });
     } catch (err) {
       if (session !== sessionRef.current) return;
       setQuestionError(
@@ -146,6 +159,7 @@ export default function App() {
             onRecorded={handleRecorded}
             busy={busy}
             error={questionError}
+            unclear={qIndex === 0 && q0Unclear}
           />
         )}
         {screen === "summarizing" && <section className="card"><p>Przygotowywanie podsumowania…</p></section>}

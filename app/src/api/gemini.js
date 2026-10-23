@@ -18,7 +18,7 @@ function makeSignal(userSignal) {
   return timeout; // very old runtime: user abort is still checked before each attempt
 }
 
-// Send one request, trying models in order. Falls back only on HTTP 503 or timeout.
+// Send one request, trying models in order. Falls back only on HTTP 503, HTTP 429 or timeout.
 async function callGemini(apiKey, parts, opts = {}) {
   const fetchImpl = opts.fetchImpl || globalThis.fetch;
   const body = JSON.stringify({
@@ -45,8 +45,9 @@ async function callGemini(apiKey, parts, opts = {}) {
       }
       throw new GeminiError("NETWORK", userAborted ? "Request aborted" : "Network error");
     }
-    if (res.status === 503) {
-      lastError = new GeminiError("HTTP", "HTTP 503");
+    if (res.status === 503 || res.status === 429) {
+      // 503 = overloaded, 429 = rate limit of this model: the next model may still answer.
+      lastError = new GeminiError("HTTP", `HTTP ${res.status}`);
       continue;
     }
     if (!res.ok) throw new GeminiError("HTTP", `HTTP ${res.status}`);
