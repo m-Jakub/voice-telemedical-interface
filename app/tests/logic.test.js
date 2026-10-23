@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   parseYesNo,
   classifyAnswer,
+  buildAnswers,
   buildTranscriptionPrompt,
   buildSummaryPrompt,
   parseSummary,
@@ -41,10 +42,28 @@ describe("config", () => {
 });
 
 describe("parseYesNo", () => {
-  it("returns no for clear negatives", () => {
-    expect(parseYesNo("Nie.")).toBe("no");
-    expect(parseYesNo("Nie, nic z tych rzeczy. Czuję się po prostu chory.")).toBe("no");
-    expect(parseYesNo("  NIE")).toBe("no");
+  it("returns no only for a bare denial", () => {
+    for (const t of ["Nie.", "NIE", "nie!", "  nie  ", '"Nie"', "Nie"]) {
+      expect(parseYesNo(t)).toBe("no");
+      expect(classifyAnswer(t)).toBe("no");
+    }
+  });
+  it("never returns no for denial + symptom, doubt or odd input", () => {
+    const risky = [
+      "Nie, ale mam duszność", "Nie, ale boli mnie w klatce", "Nie, ale chcę się zabić",
+      "nie, krwawię mocno", "Nie wiem", "Nie, nie jestem pewien", "Nie, nic z tych rzeczy",
+      "Nie nie nie", "Raczej nie", "Chyba nie", "No", "nietak", "nieźle", "",
+    ];
+    for (const t of risky) {
+      expect(parseYesNo(t)).toBe("yes");
+      expect(classifyAnswer(t)).not.toBe("no");
+    }
+  });
+  it("is yes for tak even with a later nie", () => {
+    for (const t of ["Tak", "Tak, ale nie teraz", "Tak. Nie."]) {
+      expect(parseYesNo(t)).toBe("yes");
+      expect(classifyAnswer(t)).toBe("yes");
+    }
   });
   it("returns yes for affirmative answers", () => {
     expect(parseYesNo("Tak, mam duszność, ciężko mi oddychać.")).toBe("yes");
@@ -58,8 +77,8 @@ describe("parseYesNo", () => {
   it("returns yes when a 'tak' is present even after 'nie'", () => {
     expect(parseYesNo("nie wiem, tak chyba")).toBe("yes");
   });
-  it("does not count 'tak' inside other words", () => {
-    expect(parseYesNo("Nie, taksówką jechałem")).toBe("no");
+  it("a longer text is never a bare denial, even without tak", () => {
+    expect(parseYesNo("Nie, taksówką jechałem")).toBe("yes");
   });
   it("decision: 'Nieee' and 'nieźle' are not a clear 'nie', so yes (fail up)", () => {
     expect(parseYesNo("Nieee")).toBe("yes");
@@ -89,9 +108,9 @@ describe("classifyAnswer", () => {
     expect(classifyAnswer("  ")).toBe("unclear");
     expect(classifyAnswer(null)).toBe("unclear");
   });
-  it("is no for a clear leading nie without tak", () => {
+  it("is no for a bare nie, unclear for a longer denial", () => {
     expect(classifyAnswer("Nie.")).toBe("no");
-    expect(classifyAnswer("Nie, nic z tych rzeczy.")).toBe("no");
+    expect(classifyAnswer("Nie, nic z tych rzeczy.")).toBe("unclear");
   });
   it("is yes when a whole-word tak is present", () => {
     expect(classifyAnswer("Tak, mam duszność")).toBe("yes");
@@ -101,6 +120,16 @@ describe("classifyAnswer", () => {
     expect(classifyAnswer("nieźle")).toBe("unclear");
     expect(classifyAnswer("Głowa mi pęka od tego hałasu.")).toBe("unclear");
     expect(classifyAnswer("No nie wiem")).toBe("unclear");
+  });
+});
+
+describe("buildAnswers", () => {
+  it("puts q0 first and the rest after it", () => {
+    const rest = [{ questionId: "q1", question: "Co Ci dolega?", text: "kaszel" }];
+    const list = buildAnswers(QUESTIONS[0].text, "Nie.", rest);
+    expect(list.map((a) => a.questionId)).toEqual(["q0", "q1"]);
+    expect(list[0]).toEqual({ questionId: "q0", question: QUESTIONS[0].text, text: "Nie." });
+    expect(buildSummaryPrompt(list)).toContain('"questionId":"q0"');
   });
 });
 
@@ -259,7 +288,7 @@ describe("formatSummary", () => {
 
 describe("scenarios 1-5 (logic only)", () => {
   it("scenario 1: Q0 no", () => {
-    expect(parseYesNo("Nie, nic z tych rzeczy. Czuję się po prostu chory.")).toBe("no");
+    expect(parseYesNo("Nie.")).toBe("no");
     expect(shouldEscalate("no", { ...emptySummary(), chief_complaint: "ból gardła i gorączka" }).escalate).toBe(false);
   });
   it("scenario 2: negation trap, Q0 no and unflagged summary", () => {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { QUESTIONS } from "./config.js";
-import { parseYesNo, classifyAnswer, emptySummary, shouldEscalate } from "./logic.js";
+import { parseYesNo, classifyAnswer, buildAnswers, emptySummary, shouldEscalate } from "./logic.js";
 import { summarize, transcribe } from "./api/gemini.js";
 import { notifyDoctor, getAlerts, subscribeAlerts, clearAlerts } from "./notifyDoctor.js";
 import Banner from "./components/Banner.jsx";
@@ -31,6 +31,10 @@ export default function App() {
   const latchRef = useRef(false);
   // Incremented on Clear; async results from an older session are dropped.
   const sessionRef = useRef(0);
+  // Current question index as a ref: handleRecorded may run from a stale closure (recorder callback).
+  const qIndexRef = useRef(0);
+  // Guards runSummarize against a double click on the last "Dalej" (one API call only).
+  const summarizingRef = useRef(false);
 
   useEffect(() => subscribeAlerts(setAlerts), []);
 
@@ -58,6 +62,8 @@ export default function App() {
     setEscalation(NO_ESCALATION);
     setEscalated(false);
     latchRef.current = false;
+    summarizingRef.current = false;
+    qIndexRef.current = 0;
     setBusy(false);
     setQuestionError(null);
     setErrorMessage("");
@@ -67,6 +73,7 @@ export default function App() {
   }
 
   function goToQuestion(i) {
+    qIndexRef.current = i;
     setQIndex(i);
     setTranscript(null);
     setQ0Unclear(false);
@@ -75,16 +82,21 @@ export default function App() {
   }
 
   async function runSummarize(list) {
+    if (summarizingRef.current) return; // already running: ignore the second click
+    summarizingRef.current = true;
     setScreen("summarizing");
     const session = sessionRef.current;
     try {
       const s = await summarize(apiKey, list);
       if (session !== sessionRef.current) return; // cleared meanwhile
+      summarizingRef.current = false;
       setSummary(s);
       escalate(shouldEscalate("no", s));
       setScreen("result");
     } catch (err) {
       if (session !== sessionRef.current) return;
+      summarizingRef.current = false; // allow retry
+      // (Clear resets the flag in clearAll)
       // Answers are kept; no summary shown; notifyDoctor not called.
       setErrorMessage(
         "Nie udało się przygotować podsumowania" + (err && err.code ? ` (${err.code})` : "") + ". Spróbuj ponownie."
@@ -108,6 +120,8 @@ export default function App() {
         escalate({ escalate: true, source: "screening", quote: text });
         setScreen("result");
       } else {
+        // Defence in depth: the Q0 text goes first into the answers sent to the LLM.
+        setAnswers(buildAnswers(q.text, text, []));
         goToQuestion(1);
       }
       return;
@@ -122,9 +136,11 @@ export default function App() {
     setBusy(true);
     setQuestionError(null);
     const session = sessionRef.current;
+    const askedIndex = qIndexRef.current; // question this recording belongs to
     try {
       const res = await transcribe(apiKey, blob);
       if (session !== sessionRef.current) return; // cleared meanwhile
+      if (askedIndex !== qIndexRef.current) return; // question changed meanwhile: drop the transcript
       transcriptCount.current += 1;
       setTranscript({ text: res.text || "", n: transcriptCount.current });
     } catch (err) {

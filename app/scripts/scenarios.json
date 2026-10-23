@@ -3,8 +3,8 @@
     "id": 1,
     "name": "Simple common complaint, no escalation",
     "answers": {
-      "q0": "Nie, nic z tych rzeczy. Czuję się po prostu chory.",
-      "q1": "Boli mnie gardło i mam gorączkę, chyba jakieś trzy osiemnaście.",
+      "q0": "Nie.",
+      "q1": "Boli mnie gardło i mam gorączkę, chyba jakieś trzydzieści osiem i pół.",
       "q2": "Od dwóch dni, od wczoraj gorączka jest wyższa.",
       "q3": "Nie biorę nic na stałe, tylko czasem paracetamol.",
       "q4": "Nie, nie mam alergii."

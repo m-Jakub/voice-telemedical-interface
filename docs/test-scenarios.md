@@ -39,8 +39,8 @@ Sore throat and fever for 2 days. Nothing alarming.
 
 | Question | Answer (Polish, as dictated) |
 |---|---|
-| Q0 | "Nie, nic z tych rzeczy. Czuję się po prostu chory." |
-| Q1 | "Boli mnie gardło i mam gorączkę, chyba jakieś trzy osiemnaście." |
+| Q0 | "Nie." |
+| Q1 | "Boli mnie gardło i mam gorączkę, chyba jakieś trzydzieści osiem i pół." |
 | Q2 | "Od dwóch dni, od wczoraj gorączka jest wyższa." |
 | Q3 | "Nie biorę nic na stałe, tylko czasem paracetamol." |
 | Q4 | "Nie, nie mam alergii." |

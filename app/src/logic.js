@@ -1,14 +1,19 @@
 // Pure logic: no fetch, no React.
 import { NOT_STATED, NO_ANSWER } from "./config.js";
 
-// Screening answer. "no" only for a clear leading "nie" with no "tak"; everything else escalates.
-// JS \b is ASCII-only, so "nieźle" would pass \b; use a Unicode-aware lookahead instead.
-const STARTS_WITH_NO = /^\s*nie(?![\p{L}\p{N}_])/iu;
+// Screening answer. "no" ONLY for a bare denial: a single "nie" with optional punctuation/quotes.
+// Anything longer ("Nie, ale mam duszność", "Nie wiem", "Nie nie nie") is NOT a denial: a symptom or
+// doubt can follow "nie". Only a SINGLE bare "nie" counts, so "Nie nie nie" is unclear/yes.
+// Price of not guessing from free text: natural longer denials ("Nie, nic z tych rzeczy") must be
+// confirmed with the Tak/Nie buttons. Unicode-aware: "nieźle" and "nietak" must not match.
+const BARE_NO = /^[\s"'„”«»]*nie[\s.!"'„”«»]*$/iu;
+// JS \b is ASCII-only, so use Unicode-aware lookarounds for the whole-word "tak".
 const HAS_TAK = /(?<![\p{L}\p{N}_])tak(?![\p{L}\p{N}_])/iu;
 
+// The escalation decision. Must fail UP: only a bare "nie" without "tak" is "no".
 export function parseYesNo(text) {
   const t = typeof text === "string" ? text : "";
-  if (STARTS_WITH_NO.test(t) && !HAS_TAK.test(t)) return "no";
+  if (BARE_NO.test(t) && !HAS_TAK.test(t)) return "no";
   return "yes"; // fail towards escalation (also for empty text)
 }
 
@@ -18,8 +23,14 @@ export function classifyAnswer(text) {
   const t = typeof text === "string" ? text : "";
   if (t.trim() === "") return "unclear";
   if (HAS_TAK.test(t)) return "yes";
-  if (STARTS_WITH_NO.test(t)) return "no";
+  if (BARE_NO.test(t)) return "no";
   return "unclear";
+}
+
+// Answers sent to the summary LLM: the Q0 text comes first so the second safety layer sees it
+// even when the screening was resolved as "no".
+export function buildAnswers(q0Question, q0Text, rest) {
+  return [{ questionId: "q0", question: q0Question, text: q0Text }, ...(Array.isArray(rest) ? rest : [])];
 }
 
 export function buildTranscriptionPrompt() {
@@ -43,6 +54,7 @@ export function buildSummaryPrompt(answers) {
     "",
     "Rules:",
     `- Use only what the patient said. If something is absent, unknown or unanswered, write "${NOT_STATED}".`,
+    `- If the patient explicitly denies something (for example no allergies or no regular medication), write "brak" for that field. If the patient says they do not know or do not remember, write "${NOT_STATED}" and do not copy their words into the field.`,
     "- Do not add any extra fields.",
     "- Do not diagnose, do not rate urgency, do not give advice.",
     "- patient_quotes: short verbatim excerpts from the patient's answers.",

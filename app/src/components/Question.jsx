@@ -138,6 +138,9 @@ export default function Question({ question, onSubmit, onRecorded, busy, error, 
   return (
     <section className="card">
       <h2>{question.text}</h2>
+      {question.id === "q0" && (
+        <p className="hint">Powiedz krótko: „Tak” albo „Nie”. Dłuższą odpowiedź potwierdzisz przyciskiem.</p>
+      )}
       <Recorder onBlob={onRecorded} disabled={busy} />
       <label htmlFor="answer">Odpowiedź tekstem. Sprawdź, czy tekst zgadza się z tym, co powiedziałeś.</label>
       <textarea

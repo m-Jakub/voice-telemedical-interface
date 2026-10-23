@@ -20,4 +20,4 @@ export const EMERGENCY_TEXT =
   "Zadzwoń teraz pod numer alarmowy (112 w UE, za granicą lokalny numer alarmowy).";
 export const REQUEST_TIMEOUT_MS = 30000;
 export const DISCLAIMER_TEXT =
-  "To asystent AI, nie lekarz. Nie stawia diagnozy i nie ocenia pilności. W nagłym przypadku zadzwoń pod numer 112.";
+  "To asystent AI, nie lekarz. Nie stawia diagnozy i nie ocenia pilności. W nagłym przypadku zadzwoń pod numer alarmowy:";
