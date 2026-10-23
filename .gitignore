@@ -5,6 +5,7 @@
 
 # Local-only materials
 context/
+logs/
 
 # Python
 __pycache__/
