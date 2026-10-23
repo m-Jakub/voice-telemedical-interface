@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "name": "Simple common complaint, no escalation",
+    "answers": {
+      "q0": "Nie, nic z tych rzeczy. Czuję się po prostu chory.",
+      "q1": "Boli mnie gardło i mam gorączkę, chyba jakieś trzy osiemnaście.",
+      "q2": "Od dwóch dni, od wczoraj gorączka jest wyższa.",
+      "q3": "Nie biorę nic na stałe, tylko czasem paracetamol.",
+      "q4": "Nie, nie mam alergii."
+    },
+    "expectEscalate": false
+  },
+  {
+    "id": 2,
+    "name": "Negation trap, no escalation",
+    "answers": {
+      "q0": "Nie.",
+      "q1": "Mam kaszel i katar, ale nie mam duszności ani bólu w klatce piersiowej, oddycham normalnie.",
+      "q2": "Od trzech dni.",
+      "q3": "Biorę tylko syrop na kaszel, nic więcej.",
+      "q4": "Nie, nie mam żadnych alergii, nie znam żadnych uczuleń."
+    },
+    "expectEscalate": false
+  },
+  {
+    "id": 3,
+    "name": "Hidden red flag in free text, escalate",
+    "answers": {
+      "q0": "Nie.",
+      "q1": "Od godziny ściska mnie w klatce piersiowej i drętwieje mi lewa ręka.",
+      "q2": "Od około godziny, nagle się zaczęło.",
+      "q3": "Biorę tabletki na nadciśnienie, nazwy nie znam.",
+      "q4": "Nie, nie mam alergii."
+    },
+    "expectEscalate": true
+  },
+  {
+    "id": 4,
+    "name": "Screening yes, immediate escalation",
+    "answers": {
+      "q0": "Tak, mam duszność, ciężko mi oddychać."
+    },
+    "expectEscalate": true
+  },
+  {
+    "id": 5,
+    "name": "Incomplete answers, no escalation",
+    "answers": {
+      "q0": "Nie.",
+      "q1": "Boli mnie brzuch, takie tępe bóle, zwłaszcza po jedzeniu.",
+      "q2": "Nie pamiętam, nie wiem, dawno już.",
+      "q3": "Nie wiem, nie pamiętam nazw leków.",
+      "q4": ""
+    },
+    "expectEscalate": false
+  }
+]
