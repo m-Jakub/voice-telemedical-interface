@@ -2,7 +2,7 @@
 
 This is my **portable base**: the working rules I have developed over my own projects
 and carry into every new repository. It is meant to be **adapted** to each place, not used
-as-is. The reasoning behind the rules is in `WHY_CLAUDE_MD.md`, kept out of this file so it
+as-is. The reasoning behind the rules is in `docs/WHY_CLAUDE_MD.md`, kept out of this file so it
 does not cost context in every session. You do not need to read it to follow the rules.
 
 - Sections marked **[BASE]** are my stable defaults. Keep them unless I say otherwise.
@@ -59,6 +59,9 @@ Group questions together instead of interrupting one by one.
 - Subagents only when they earn it: heavy reading that would flood the main context,
   or an independent critic with a fresh context. A small project usually needs none or one.
 - Do not read large files whole when a fragment is enough.
+- Helper subagents (actors, critics, summarizers) run on Sonnet or Haiku, not Opus:
+  their job is to give the main agent cheap, different perspectives; the main agent
+  decides. (2026-10-23)
 
 ## Secrets [BASE]
 - API keys live in `.env` (gitignored) or are entered by the user in the app.
@@ -102,10 +105,22 @@ or a decision, ask before acting.
 
 ## [PROJECT]
 <!-- Empty in the base. Filled in during bootstrap. Keep it short. -->
-- Context and goal:
-- Constraints (time budget, hard requirements):
-- Stack and commands (run, test):
-- Phases and gates:
-- Definition of done:
-- Project-specific rules:
-- Base rules dropped or changed here (and why):
+- Context and goal: voice pre-consultation intake for a telemedicine service. The patient
+  answers fixed questions by voice; the doctor gets a structured summary with the patient's
+  verbatim words. Brief and company context in `context/` (local only, gitignored).
+- Constraints (time budget, hard requirements): start 15:04, target ~16:15, hard limit 16:45
+  (2026-10-23). One end-to-end flow. API key entered in the UI, kept in memory only.
+  Fictional data only (Gemini free tier may use content to improve Google products).
+- Stack and commands (run, test): Vite + React + JavaScript (no TypeScript), Gemini API for
+  transcription and summary, called from the browser. `npm run dev`, `npm test` (Vitest).
+- Phases and gates: (1) Gemini spike from the browser, (2) intake flow, (3) summary and
+  red-flag escalation with unit tests, (4) README, DECISIONS, screenshots.
+  Each phase ends with a STOP for my decision.
+- Definition of done: the full flow works on a fictional scenario; unit tests pass;
+  automated text-input tests on 4-5 fictional cases pass; README covers why / what was cut /
+  safety / production caveats.
+- Project-specific rules: the AI never scores urgency, diagnoses, advises treatment or
+  reassures. Red-flag escalation only goes up, never down. A red flag shows "call the
+  emergency number (112 in the EU)" AND sends an alert in the system at once. The red-flag
+  list is illustrative, not clinically validated. Nothing in the repo mentions recruitment.
+- Base rules dropped or changed here (and why): none so far.

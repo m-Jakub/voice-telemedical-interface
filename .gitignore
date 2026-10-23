@@ -4,8 +4,7 @@
 !.env.example
 
 # Local-only materials
-TASK.md
-about_Telemedi.md
+context/
 
 # Python
 __pycache__/
