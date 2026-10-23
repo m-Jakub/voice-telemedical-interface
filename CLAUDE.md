@@ -56,8 +56,11 @@ Group questions together instead of interrupting one by one.
 - Mechanical work (extraction, reformatting, bulk reading) goes to Haiku subagents.
   Haiku never edits my own words.
 - Quality checks by scripts instead of extra model calls when possible.
-- Subagents only when they earn it: heavy reading that would flood the main context,
-  or an independent critic with a fresh context. A small project usually needs none or one.
+- Use subagents to parallelise independent work (verification, research, drafting,
+  several checks at once), and for heavy reading or an independent critic with a fresh
+  context. Pick the model by importance: Haiku for mechanical work, Sonnet for analysis
+  and code, Opus for top-level orchestration when the process is complex enough to need
+  it. (2026-10-23)
 - Do not read large files whole when a fragment is enough.
 - Helper subagents (actors, critics, summarizers) run on Sonnet or Haiku, not Opus:
   their job is to give the main agent cheap, different perspectives; the main agent
