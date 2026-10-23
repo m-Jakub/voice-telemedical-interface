@@ -61,6 +61,7 @@ Dated log of conscious decisions, cuts and rejected options. One-line reasons.
 
 - TTS reading the questions aloud.
 - Highlighting uncertain transcript words.
+- Message for an empty transcript (no speech captured): the field stays empty with a "check the text" label and no explanation. Postponed: ran out of time.
 - Duplicate "112" text in the banner (UI cleanup).
 - Clinical validation of the red-flag list and questions.
 - Backend proxy with a server-held key.

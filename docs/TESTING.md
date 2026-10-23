@@ -76,6 +76,7 @@ Pick a wrong input device, or mute the microphone in the OS, and record. Expecte
 | Scenario 1 Q0 was a long denial ("Nie, nic z tych rzeczy...") | Consequence of the Q0 fix | Test data changed to a bare "Nie." because the requirement changed: only a bare "Nie." is accepted automatically. This is not a weakened test; a longer denial now correctly needs a button click |
 | Double click on the last "Dalej" could start two summarize calls | Adversarial review | Guard implemented (second call blocked). No automated test; manual check TODO |
 | A recording finishing after the patient moved on could fill the next question's field | Adversarial review | Guard implemented (stale result dropped when the question changed). No automated test; manual check TODO |
+| Empty transcript (no speech captured) shows an empty field under "check that the text matches what you said", with no explanation; the user does not know what to do | Manual voice test | NOT fixed: ran out of time. Needs an explicit "no speech detected, record again or type the answer" message |
 | Duplicate "112" in the banner | Review | Fixed: single red bold 112 in the banner, one 112 in the emergency box. Visual check in the browser TODO |
 | Allergies "nie podano" after a denial; verbatim "I don't know" copied into fields | Automated scenarios 2 and 5 | Prompt change applied (denial gives "brak", "nie wiem" gives "nie podano"). Scenarios 5/5 PASS afterwards, but the fields were not read: confirm (TODO) |
 
@@ -104,6 +105,7 @@ Not covered:
 - [ ] Read the summaries of scenarios 2 and 5 to confirm "brak" / "nie podano" as agreed.
 - [x] "Nie, ale mam duszność", "Nie wiem" and similar need confirmation (unit tests). Manual check of the Q0 buttons and hint in the browser still TODO.
 - [ ] Confirm the double-click guard on the last "Dalej" and the stale-recording guard by hand (optional: component tests).
+- [ ] Add a clear message when the transcript is empty (no speech captured); not done, ran out of time.
 - [ ] Confirm a single "112" in the banner visually.
 - [ ] Verify the wrong or muted microphone message (see section 4).
 - [ ] Manual test of the newest build (Q0 changes, recorder guards, single 112).

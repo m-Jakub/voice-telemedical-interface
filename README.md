@@ -38,6 +38,7 @@ The idea started from triage: long waits in an emergency department just to answ
 - Price of this rule: a natural longer denial needs one button click. This is deliberate; the app does not guess from free text. The escalation parser still fails up (anything that is not a bare "nie" counts as yes).
 - The Q0 answer text is also sent to the model as part of the data (defence in depth).
 - The mock alert panel "Alerty dla lekarza" is the only "notification"; nothing real is sent.
+- Known gap (not done, ran out of time): when a recording is sent but the transcript comes back empty (no speech captured), the answer field stays empty under the label "Sprawdź, czy tekst zgadza się z tym, co powiedziałeś." and no message says that nothing was detected. This is unintuitive: a user who believes they spoke does not know what to do next. The fix is an explicit "no speech detected, record again or type the answer" message. Recordings that are too short or near-silent are already caught before sending; this case is different (audio was sent, the transcript is empty).
 
 ## API key and privacy
 

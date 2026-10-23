@@ -1,6 +1,7 @@
 # TODO (later)
 
 ## UI
+- [ ] Empty transcript (no speech captured) is confusing: the field stays empty under the label "Sprawdź, czy tekst zgadza się z tym, co powiedziałeś.", but nothing says that no speech was detected. A user who is sure they spoke does not know what to do. Needed: an explicit message when the transcript comes back empty (for example "Nie wykryto mowy. Nagraj ponownie albo wpisz odpowiedź tekstem."), and no "check the text" label next to an empty field. Not done: ran out of time.
 - [x] Duplicate "112": single red bold 112 in the banner now (done, visual check in the browser still open).
 
 ## Code
