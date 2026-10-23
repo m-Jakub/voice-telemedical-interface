@@ -1,17 +1,25 @@
 # TODO (later)
 
 ## UI
-- [ ] Duplicate "112": the yellow banner ends with "call 112", and a red emergency box repeats it. Remove the 112 from the yellow text and keep only the red one.
+- [x] Duplicate "112": single red bold 112 in the banner now (done, visual check in the browser still open).
 
 ## Code
-- [ ] Treat HTTP 429 like 503 in `app/src/api/gemini.js`: try the next model in `MODEL_IDS` (limits may be per model), add a test. (Approved 2026-10-23, to do after the manual voice test so the live page is not reloaded mid-test.)
-- [ ] Verify audio input (`audio/webm`) on the chosen models in a real browser run; check Polish quality.
-- [ ] Two recordings in a row that give the same text do not refill the field.
+- [x] Treat HTTP 429 like 503 in `app/src/api/gemini.js` (done, with a test).
+- [ ] Verify audio input (`audio/webm`) on the chosen models in a real browser run with the newest build; check Polish quality.
+- [x] Two recordings in a row that give the same text now refill the field.
+- [x] Test for the browser base64 branch.
+- [ ] Optional: component tests for the race guards (stale recording result, double click on the last "Dalej").
+
+## Verification
+- [ ] Confirm the allergy / "nie wiem" summaries (scenarios 2 and 5) by reading the outputs, not only PASS/FAIL.
+- [ ] Manual test of the newest build (Q0 changes, recorder guards, single 112), including a wrong or muted microphone.
+- [ ] Screenshots for the README.
 
 ## Docs
-- [ ] Update `docs/DOCUMENTATION.md` after implementation (see its checklist).
-- [ ] Fill README TODOs: run commands, screenshots, test results, TTS yes/no.
-- [ ] `DECISIONS.md`: cuts and rejected options, free-tier model instability, OpenAI as plan B if Gemini is not enough.
+- [x] Update `docs/DOCUMENTATION.md` after implementation (done for a255031; remaining items are in its checklist).
+- [x] Fill README run commands and test results.
+- [ ] README: screenshots and final review.
+- [x] `DECISIONS.md` exists.
 
 ## Cut for now
 - [ ] Highlighting uncertain transcript words, TTS reading the questions aloud.

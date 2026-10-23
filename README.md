@@ -29,7 +29,15 @@ The idea started from triage: long waits in an emergency department just to answ
 - On escalation the app shows "call the emergency number (112 in the EU; local number abroad)" and automatically sends an alert into the system. In this prototype that is a MOCK alert panel; production needs integration with the real clinical system.
 - The app never displays "no red flags". It says "not a safety clearance".
 - Errors never look like a normal summary.
-- The transcript is editable, and uncertain words are highlighted. Uncertainty is model self-reported, not calibrated.
+- The transcript is editable and the patient is asked to check it against what they said. The last recording can be played back. Highlighting of uncertain words was cut.
+- Recordings that are too short, empty or near-silent are not sent to the model; the transcription prompt returns empty text when no clear human speech is audible.
+
+## Behaviour worth knowing
+
+- Screening question (Q0): only a bare "Nie." counts as "no". "Tak" escalates. Any other answer ("Nie, nic z tych rzeczy", "Nie wiem", "Nie, ale mam duszność", unrelated text) is "unclear": the patient stays on Q0 and is asked to repeat or to press an explicit "Tak, mam taki objaw" / "Nie, nie mam żadnego z tych objawów" button.
+- Price of this rule: a natural longer denial needs one button click. This is deliberate; the app does not guess from free text. The escalation parser still fails up (anything that is not a bare "nie" counts as yes).
+- The Q0 answer text is also sent to the model as part of the data (defence in depth).
+- The mock alert panel "Alerty dla lekarza" is the only "notification"; nothing real is sent.
 
 ## API key and privacy
 
@@ -49,21 +57,40 @@ The idea started from triage: long waits in an emergency department just to answ
 
 ## Setup and run
 
-TODO: fill in after the final build (install, `.env`/key handling, dev server, test commands).
+Prerequisites: Node 20.6+ and a Gemini API key of your own.
+
+1. Install dependencies inside the `app/` folder: `npm install`. (`npm --prefix app install` from the repo root may fail on Windows with ENOENT; running it inside `app/` works.)
+2. From the repo root: `npm --prefix app run dev`, then open http://localhost:5173.
+3. Paste your Gemini API key into the field on the first screen. It is kept in memory only. Use fictional data only.
+
+Build: `npm --prefix app run build`. The `.env` file (gitignored, `GEMINI_API_KEY`) is used only by the Node scenario script.
 
 ## Screenshots
 
-TODO
+TODO (not taken yet)
 
 ## Testing approach
 
-- Unit tests (Vitest) on pure logic.
-- Automated text-input runs on fictional cases (`docs/test-scenarios.md`).
-- Manual voice run.
+Three layers (details and observations in [docs/TESTING.md](docs/TESTING.md)):
 
-Results: TODO
+- Unit tests (Vitest) on pure logic, the API module with mocked `fetch`, and the mock notifier: `npm --prefix app test`.
+- Automated text-input runs on 5 fictional cases against the real Gemini API ([docs/test-scenarios.md](docs/test-scenarios.md)): `node --env-file=.env app/scripts/run-scenarios.mjs` from the repo root.
+- Manual voice run in a real browser.
+
+Results as of 2026-10-23, commit a255031:
+
+- Unit tests: 114 passing in 5 files. The build succeeds.
+- Scenarios: one run, all 5 PASS (the script prints PASS/FAIL only; the model is not deterministic, so one run is one sample). The summary fields after the latest prompt change are not yet inspected.
+- Manual voice: earlier runs failed because of a wrong microphone; with the right one the full flow gave a correct summary. The newest build has not yet been tried by hand (TODO).
+
+## More documentation
+
+- [DECISIONS.md](DECISIONS.md): cuts and rejected options with reasons.
+- [docs/TESTING.md](docs/TESTING.md): test approach, results, defects, limits.
+- [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md): technical documentation.
+- `docs/design/`: architecture and diagrams.
 
 ## AI services used
 
-- Google Gemini: transcription and summary.
-- Browser `speechSynthesis`: TODO (confirm whether used).
+- Google Gemini: transcription and summary. Models are tried in order (`gemini-3.5-flash`, then `gemini-3.1-flash-lite`); the next one is used on HTTP 503, 429 or timeout.
+- Text-to-speech (reading questions aloud) was cut; it is not used.
