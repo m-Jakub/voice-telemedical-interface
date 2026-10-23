@@ -3,6 +3,24 @@ A personal project exploring voice as an interface in telemedicine. Before a con
 
 Stack: Vite + React + JavaScript, no backend. This is a prototype and not a medical product.
 
+## How it works
+
+```mermaid
+flowchart TD
+    A["Consent screen<br/>privacy note + own Gemini API key"] --> Q0{"Q0 screening question:<br/>any emergency symptom now?"}
+    Q0 -->|"Tak"| ESC
+    Q0 -->|"unclear, e.g. long answer or noise"| U["Nie zrozumieliśmy<br/>repeat, or press Tak / Nie"]
+    U --> Q0
+    Q0 -->|"bare Nie."| Q["Q1-Q4 by voice or text<br/>Gemini transcription, editable"]
+    Q --> S["Gemini summary for the doctor<br/>JSON, Q0 answer included"]
+    S -->|"API error, timeout or malformed output"| ERR["Error screen<br/>emergency number + retry"]
+    S -->|"llm_red_flag = true"| ESC
+    S -->|"no flag from this check"| R["Summary for the doctor<br/>no safety or all-clear claim"]
+    ESC["Escalation, only goes up<br/>alert to doctor (mock) + call 112"]
+```
+
+Every screen shows a banner: AI assistant, not a doctor; in an emergency call 112. Recordings that are too short or near-silent are rejected before they reach Gemini. More diagrams (modules, escalation logic as designed) are in [docs/design/architecture-diagram.md](docs/design/architecture-diagram.md).
+
 ## Why this problem
 
 The idea started from triage: long waits in an emergency department just to answer a few questions. But a telemedicine service is not an ER. Triage decides urgency and order, and an unvalidated LLM fed by speech-recognition errors could harm patients or prioritise them unfairly. So the project does pre-consultation intake instead. Doctors already take the history; this prepares it.
