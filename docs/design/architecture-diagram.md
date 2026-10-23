@@ -77,18 +77,18 @@ flowchart LR
 
 ## 3. Escalation decision
 
-Escalation is an OR-gate: the Q0 answer (fail-up, anything not clearly "nie" counts as yes) or the LLM red flag. A malformed LLM result is an error, never "no flag". Nothing in the LLM output can cancel an escalation.
+Escalation is an OR-gate. In every gate, "Tak" (Yes) always means "danger signal present" and "Nie" (No) always means "no signal from this check". Gate 1 asks about the patient's reported symptom in Q0; anything other than a clear denial (unclear or ambiguous answer) counts as a reported symptom, because `parseYesNo` fails towards escalation. Gate 2 asks about the LLM red flag, and only after the summary. If the LLM flag is false, the summary is shown without any "all clear" claim. Gate 3 checks the model response: a malformed or incomplete result is an error screen with the 112 message, never treated as "no flag". Once escalated, nothing in the LLM output can cancel it; only Clear resets the latch.
 
 ```mermaid
 flowchart TD
-    A["Q0 answer"] --> P{"parseYesNo<br/>clearly 'nie' and no 'tak'?"}
-    P -->|"no: starts with 'nie'"| Q["Q1..Q4 and summarize"]
-    P -->|"yes: anything else"| E
-    Q --> S{"parseSummary<br/>valid shape and boolean llm_red_flag?"}
-    S -->|"malformed"| X["error screen<br/>EMERGENCY_TEXT, never 'no flag'"]
-    S -->|valid| F{"llm_red_flag"}
-    F -->|true| E["escalate"]
-    F -->|false| N["no escalation<br/>no reassurance text"]
-    E --> D["notifyDoctor<br/>+ 112 message"]
+    A["Q0 answer from patient"] --> G1{"Gate 1<br/>Pacjent zgłasza objaw alarmowy<br/>w pytaniu przesiewowym Q0?"}
+    G1 -->|"Tak (also unclear or ambiguous answer:<br/>parseYesNo fails towards escalation)"| E
+    G1 -->|"Nie (clear denial only)"| Q["Q1..Q4 and summarize"]
+    Q --> G3{"Gate 3<br/>Odpowiedź modelu uszkodzona<br/>lub niekompletna?"}
+    G3 -->|"Tak"| X["error screen<br/>112 message, never treated as 'no flag'"]
+    G3 -->|"Nie"| G2{"Gate 2<br/>Podsumowanie wskazuje objaw alarmowy<br/>(llm_red_flag = true)?"}
+    G2 -->|"Tak"| E["ESCALATE"]
+    G2 -->|"Nie"| N["Podsumowanie dla lekarza,<br/>bez oceny bezpieczeństwa"]
+    E --> D["notifyDoctor (automatic, mock)<br/>+ 112 message"]
     D --> L["latch set<br/>LLM can never cancel;<br/>only Clear resets"]
 ```
